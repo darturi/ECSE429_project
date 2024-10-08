@@ -166,6 +166,36 @@ class Tests{
 
         // Pure Post Tests
         @Test
+        public void putMalformedJSON(){
+            int beforeTodoCount = getTodoCount();
+            final HashMap<String, String> commandBody = new HashMap<String, String>();
+            commandBody.put("title", "TEST MALFORMED");
+
+            final JsonPath body = given().body(commandBody.toString().substring(1)).
+                    when().post("/todos").
+                    then().
+                    statusCode(400).
+                    contentType("text/html;charset=utf-8").
+                    and().extract().body().jsonPath();
+
+            Assertions.assertEquals(beforeTodoCount, getTodoCount());
+        }
+
+        @Test
+        public void putMalformedXML(){
+            int beforeTodoCount = getTodoCount();
+            final JsonPath body = given().body("<todo><title>Hello</title></todo").
+                    accept("application/xml").
+                    when().post("/todos").
+                    then().
+                    statusCode(400).
+                    contentType("text/html;charset=utf-8").
+                    and().extract().body().jsonPath();
+
+            Assertions.assertEquals(beforeTodoCount, getTodoCount());
+        }
+
+        @Test
         public void canCreateTodoWithJustTitleField() {
             int beforeNumberOfTodos = getTodoCount();
 
@@ -695,7 +725,7 @@ class Tests{
             Assertions.assertEquals(todoCountPreDelete, todoCountPostDelete);
         }
 
-        // NOT GOOD BEHAVIOR, and again output doesn't match postman
+        // NOT GOOD BEHAVIOR
         @Test
         public void deleteInvalidNonIntegerId() {
             int todoCountPreDelete = getTodoCount();
@@ -1311,7 +1341,7 @@ class Tests{
                 String xmlString = body.body().asString();
                 xmlString = xmlString.substring(7, xmlString.length() - 8);
 
-                System.out.println(xmlString);
+                // System.out.println(xmlString);
 
                 Assertions.assertEquals(1, countOccurrences(xmlString, "<todo"));
                 Assertions.assertEquals(1, countOccurrences(xmlString, "<title"));
