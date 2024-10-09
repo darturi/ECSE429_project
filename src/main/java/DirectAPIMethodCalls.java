@@ -1,5 +1,6 @@
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
+import io.restassured.http.Headers;
 import io.restassured.path.json.JsonPath;
 import io.restassured.path.xml.XmlPath;
 import io.restassured.response.Response;
@@ -819,17 +820,21 @@ class Tests{
 
                 HashMap<String, Object> associatedHash = id_list.get(key);
 
-                final Response body = given().body("").
+                Headers body = given().body("").
                         accept("application/xml").
                         when().head("/todos?id=" + key).
                         then().
                         statusCode(200).
                         contentType(ContentType.XML).
-                        and().extract().response();
+                        and().extract().headers();
 
-                String responseBody = body.body().asString();
+                String responseBody = body.asList().toString();
 
-                Assertions.assertEquals("", responseBody);
+                // Assertions.assertEquals("", responseBody);
+                Assertions.assertTrue(responseBody.contains("Date="));
+                Assertions.assertTrue(responseBody.contains("Content-Type=application/xml"));
+                Assertions.assertTrue(responseBody.contains("Transfer-Encoding=chunked"));
+                Assertions.assertTrue(responseBody.contains("Server"));
 
                 Assertions.assertEquals(beforeNumberOfTodos, getTodoCount());
 
@@ -885,19 +890,24 @@ class Tests{
         public void headAll() {
             int beforeNumberOfTodos = getTodoCount();
 
-            Response body = given().body("").
+            Headers body = given().body("").
                     accept("application/xml").
                     when().head("/todos").
                     then().
                     statusCode(200).
                     contentType(ContentType.XML).
-                    and().extract().response();
+                    and().extract().headers();
 
-            String responseBody = body.body().asString();
+            String responseBody = body.asList().toString();
 
-            // System.out.println(responseBody);
+            System.out.println(responseBody);
 
-            Assertions.assertEquals("", responseBody);
+            // Assertions.assertEquals("", responseBody);
+
+            Assertions.assertTrue(responseBody.contains("Date="));
+            Assertions.assertTrue(responseBody.contains("Content-Type=application/xml"));
+            Assertions.assertTrue(responseBody.contains("Transfer-Encoding=chunked"));
+            Assertions.assertTrue(responseBody.contains("Server"));
 
             Assertions.assertEquals(beforeNumberOfTodos, getTodoCount());
         }
@@ -1286,6 +1296,8 @@ class Tests{
             int beforeAdd = getTodoCount();
 
             String newId = createExampleTodo(potentialTitle, false, "");
+
+            Assertions.assertTrue(checkAddWorked(newId, potentialTitle, "false", ""));
 
             Assertions.assertEquals(beforeAdd + 1, getTodoCount());
 
